@@ -51,7 +51,8 @@ impl WorkerResources {
     }
 
     pub(crate) fn is_capable_to_run(&self, request: &ResourceRequest) -> bool {
-        let has_cpus = match request.cpus() {
+        todo!()
+        /*let has_cpus = match request.cpus() {
             CpuRequest::Compact(n_cpus)
             | CpuRequest::ForceCompact(n_cpus)
             | CpuRequest::Scatter(n_cpus) => *n_cpus <= self.n_cpus,
@@ -64,16 +65,17 @@ impl WorkerResources {
                         .n_generic_resources
                         .get(r.resource.as_num() as usize)
                         .unwrap_or(&0)
-            })
+            })*/
     }
 
     pub(crate) fn n_cpus(&self, request: &ResourceRequest) -> NumOfCpus {
-        match request.cpus() {
-            CpuRequest::Compact(n_cpus)
-            | CpuRequest::ForceCompact(n_cpus)
-            | CpuRequest::Scatter(n_cpus) => *n_cpus,
-            CpuRequest::All => self.n_cpus,
-        }
+        todo!()
+        // match request.cpus() {
+        //     CpuRequest::Compact(n_cpus)
+        //     | CpuRequest::ForceCompact(n_cpus)
+        //     | CpuRequest::Scatter(n_cpus) => *n_cpus,
+        //     CpuRequest::All => self.n_cpus,
+        // }
     }
 }
 
@@ -98,18 +100,20 @@ impl WorkerLoad {
 
     #[inline]
     pub(crate) fn add_request(&mut self, rq: &ResourceRequest, wr: &WorkerResources) {
-        self.n_cpus += wr.n_cpus(rq);
+        todo!()
+        /*self.n_cpus += wr.n_cpus(rq);
         for r in rq.generic_requests() {
             self.n_generic_resources[r.resource] += r.amount;
-        }
+        }*/
     }
 
     #[inline]
     pub(crate) fn remove_request(&mut self, rq: &ResourceRequest, wr: &WorkerResources) {
-        self.n_cpus -= wr.n_cpus(rq);
+        todo!()
+        /*self.n_cpus -= wr.n_cpus(rq);
         for r in rq.generic_requests() {
             self.n_generic_resources[r.resource] -= r.amount;
-        }
+        }*/
     }
 
     pub(crate) fn is_underloaded(&self, wr: &WorkerResources) -> bool {
@@ -135,14 +139,15 @@ impl WorkerLoad {
         request: &ResourceRequest,
         wr: &WorkerResources,
     ) -> bool {
-        wr.n_cpus(request) + self.n_cpus <= wr.n_cpus
-            && request.generic_requests().iter().all(|r| {
-                r.amount
-                    <= *self
-                        .n_generic_resources
-                        .get(r.resource.as_num() as usize)
-                        .unwrap_or(&0)
-            })
+        todo!()
+        /*wr.n_cpus(request) + self.n_cpus <= wr.n_cpus
+        && request.generic_requests().iter().all(|r| {
+            r.amount
+                <= *self
+                    .n_generic_resources
+                    .get(r.resource.as_num() as usize)
+                    .unwrap_or(&0)
+        })*/
     }
 
     pub(crate) fn have_immediate_resources_for_lb(
@@ -213,7 +218,8 @@ impl ResourceRequestLowerBound {
     }
 
     pub(crate) fn include(&mut self, request: &ResourceRequest) {
-        match request.cpus() {
+        todo!()
+        /*match request.cpus() {
             CpuRequest::Compact(n_cpus)
             | CpuRequest::ForceCompact(n_cpus)
             | CpuRequest::Scatter(n_cpus) => {
@@ -243,7 +249,7 @@ impl ResourceRequestLowerBound {
                     *n = 0;
                 }
             }
-        }
+        }*/
     }
 }
 

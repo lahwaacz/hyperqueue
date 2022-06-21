@@ -227,13 +227,14 @@ fn insert_resources_into_env(ctx: &LaunchContext, program: &mut ProgramDefinitio
 
     let resource_map = ctx.get_resource_map();
 
-    for rq in ctx.resources().generic_requests() {
+    todo!();
+    /* for rq in ctx.resources().generic_requests() {
         let resource_name = resource_map.get_name(rq.resource).unwrap();
         program.env.insert(
             format!("HQ_RESOURCE_REQUEST_{}", resource_name).into(),
             rq.amount.to_string().into(),
         );
-    }
+    } */
 
     for alloc in &allocation.generic_allocations {
         let resource_name = resource_map.get_name(alloc.resource).unwrap();

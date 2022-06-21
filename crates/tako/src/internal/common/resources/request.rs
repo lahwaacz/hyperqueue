@@ -5,7 +5,7 @@ use crate::internal::common::resources::{
     GenericResourceAmount, GenericResourceId, NumOfCpus, NumOfNodes,
 };
 use crate::internal::worker::pool::ResourcePool;
-use smallvec::SmallVec;
+use smallvec::{smallvec, SmallVec};
 use std::time::Duration;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Hash, Eq, PartialEq)]
@@ -51,14 +51,19 @@ pub type GenericResourceRequests = SmallVec<[GenericResourceRequest; 2]>;
 pub type TimeRequest = Duration;
 
 #[derive(Default, Serialize, Deserialize, Debug, Clone, Hash, Eq, PartialEq)]
-pub struct ResourceRequest {
-    n_nodes: NumOfNodes,
-
+pub struct ResourceRequestVariant {
     cpus: CpuRequest,
 
     // After normalization, this array is sorted by resource id
     #[serde(default)]
     generic: GenericResourceRequests,
+}
+
+#[derive(Default, Serialize, Deserialize, Debug, Clone, Hash, Eq, PartialEq)]
+pub struct ResourceRequest {
+    n_nodes: NumOfNodes,
+
+    variants: SmallVec<[ResourceRequestVariant; 1]>,
 
     /// Minimal remaining time of the worker life time needed to START the task
     /// !!! Do not confuse with time_limit.
@@ -67,6 +72,25 @@ pub struct ResourceRequest {
     /// On worker with not defined life time, this resource is always satisfied.
     #[serde(default)]
     min_time: TimeRequest,
+}
+
+impl ResourceRequestVariant {
+    pub fn generic_requests(&self) -> &GenericResourceRequests {
+        &self.generic
+    }
+    pub fn cpus(&self) -> &CpuRequest {
+        &self.cpus
+    }
+
+    pub fn validate(&self) -> crate::Result<()> {
+        self.cpus.validate()?;
+        for pair in self.generic.windows(2) {
+            if pair[0].resource >= pair[1].resource {
+                return Err("Generic request are not sorted or unique".into());
+            }
+        }
+        Ok(())
+    }
 }
 
 impl ResourceRequest {
@@ -79,8 +103,10 @@ impl ResourceRequest {
         generic_resources.sort_unstable_by_key(|r| r.resource);
         ResourceRequest {
             n_nodes,
-            cpus: cpu_request,
-            generic: generic_resources,
+            variants: smallvec![ResourceRequestVariant {
+                cpus: cpu_request,
+                generic: generic_resources
+            }],
             min_time: time,
         }
     }
@@ -93,49 +119,47 @@ impl ResourceRequest {
         self.n_nodes
     }
 
-    pub fn generic_requests(&self) -> &GenericResourceRequests {
+    /*pub fn generic_requests(&self) -> &GenericResourceRequests {
         &self.generic
-    }
+    }*/
 
     pub fn min_time(&self) -> TimeRequest {
         self.min_time
     }
 
-    pub fn cpus(&self) -> &CpuRequest {
+    /*pub fn cpus(&self) -> &CpuRequest {
         &self.cpus
-    }
+    }*/
 
     pub fn sort_key(
         &self,
         resource_pool: &ResourcePool,
     ) -> (NumOfCpus, NumOfCpus, TimeRequest, f32) {
-        let generic_resources_portion = self
-            .generic
-            .iter()
-            .map(|gr| resource_pool.fraction_of_resource(gr))
-            .sum();
-
-        match &self.cpus {
-            CpuRequest::Compact(n_cpus) => (*n_cpus, 1, self.min_time, generic_resources_portion),
-            CpuRequest::ForceCompact(n_cpus) => {
-                (*n_cpus, 2, self.min_time, generic_resources_portion)
-            }
-            CpuRequest::Scatter(n_cpus) => (*n_cpus, 0, self.min_time, generic_resources_portion),
-            CpuRequest::All => (
-                NumOfCpus::MAX,
-                NumOfCpus::MAX,
-                self.min_time,
-                generic_resources_portion,
-            ),
-        }
+        todo!()
+        // let generic_resources_portion = self
+        //     .generic
+        //     .iter()
+        //     .map(|gr| resource_pool.fraction_of_resource(gr))
+        //     .sum();
+        //
+        // match &self.cpus {
+        //     CpuRequest::Compact(n_cpus) => (*n_cpus, 1, self.min_time, generic_resources_portion),
+        //     CpuRequest::ForceCompact(n_cpus) => {
+        //         (*n_cpus, 2, self.min_time, generic_resources_portion)
+        //     }
+        //     CpuRequest::Scatter(n_cpus) => (*n_cpus, 0, self.min_time, generic_resources_portion),
+        //     CpuRequest::All => (
+        //         NumOfCpus::MAX,
+        //         NumOfCpus::MAX,
+        //         self.min_time,
+        //         generic_resources_portion,
+        //     ),
+        // }
     }
 
     pub fn validate(&self) -> crate::Result<()> {
-        self.cpus.validate()?;
-        for pair in self.generic.windows(2) {
-            if pair[0].resource >= pair[1].resource {
-                return Err("Generic request are not sorted or unique".into());
-            }
+        for variant in &self.variants {
+            variant.validate()?;
         }
         Ok(())
     }

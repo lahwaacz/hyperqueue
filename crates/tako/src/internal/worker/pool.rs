@@ -146,12 +146,13 @@ impl ResourcePool {
     }
 
     pub fn n_cpus(&self, request: &ResourceRequest) -> NumOfCpus {
-        match request.cpus() {
+        todo!()
+        /*match request.cpus() {
             CpuRequest::Compact(n_cpus)
             | CpuRequest::ForceCompact(n_cpus)
             | CpuRequest::Scatter(n_cpus) => *n_cpus,
             CpuRequest::All => self.cpu_id_to_socket.len() as NumOfCpus,
-        }
+        }*/
     }
 
     fn _take_all_free_cpus(&mut self) -> Vec<CpuId> {
@@ -286,7 +287,8 @@ impl ResourcePool {
         request: &ResourceRequest,
         remaining_time: Option<Duration>,
     ) -> Option<ResourceAllocation> {
-        let n_cpus = self.n_cpus(request);
+        todo!()
+        /*let n_cpus = self.n_cpus(request);
         let total_cpus = self.n_free_cpus();
         if total_cpus < n_cpus {
             return None;
@@ -332,7 +334,7 @@ impl ResourcePool {
             Vec::new(),
             cpus,
             generic_allocations,
-        ))
+        ))*/
     }
 }
 
