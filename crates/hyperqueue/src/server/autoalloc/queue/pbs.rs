@@ -204,18 +204,20 @@ fn build_pbs_submit_script(
 ) -> String {
     let mut script = format!(
         r##"#!/bin/bash
-#PBS -l select={nodes}
 #PBS -N {name}
 #PBS -o {stdout}
 #PBS -e {stderr}
 #PBS -l walltime={walltime}
 "##,
-        nodes = nodes,
         name = name,
         stdout = stdout,
         stderr = stderr,
         walltime = format_pbs_duration(&timelimit)
     );
+
+    if !qsub_args.contains("-lselect=") && !qsub_args.contains("-l select=") {
+        writeln!(script, "#PBS -l select={nodes}").unwrap();
+    }
 
     if !qsub_args.is_empty() {
         writeln!(script, "#PBS {qsub_args}").unwrap();
